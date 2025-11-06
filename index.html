@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 用药管理 MVP 原型</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入图标库 (Heroicons) -->
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <style>
+        /* 基础样式，使用 Inter 字体 */
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'Microsoft YaHei', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* 强制提醒的 Z-index */
+        #reminderModal {
+            z-index: 9999;
+        }
+        /* 隐藏的视图 */
+        .view {
+            display: none;
+        }
+        /* 激活的视图 */
+        .view.active {
+            display: block;
+        }
+        /* 简单的加载动画 */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 max-w-lg mx-auto h-[90vh] overflow-hidden shadow-lg rounded-lg mt-4 border border-gray-300">
+
+    <!-- 主容器 -->
+    <div class="flex flex-col h-full">
+
+        <!-- 顶部导航 (模拟) -->
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 id="viewTitle" class="text-xl font-bold text-gray-800">我的用药</h1>
+                <button class="text-gray-600">
+                    <ion-icon name="person-circle-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 overflow-y-auto p-4 pb-20">
+
+            <!-- 视图 1: 首页 (用药时间表) -->
+            <div id="homeView" class="view active">
+                <div class="bg-white p-4 rounded-lg shadow mb-4">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-2">今日用药 - 11月6日 (周四)</h2>
+                    <p class="text-sm text-gray-500">您今日有 3 项用药计划。</p>
+                </div>
+
+                <!-- 时间线 -->
+                <div id="medicationList" class="space-y-4">
+                    <!-- 动态渲染的药物项将插入这里 -->
+                    <div class="flex items-center space-x-3 p-4 bg-white rounded-lg shadow opacity-50">
+                        <ion-icon name="time-outline" class="text-3xl text-gray-400"></ion-icon>
+                        <div class="flex-1 cursor-pointer" onclick="showMedDetail(0)">
+                            <p class="font-semibold text-gray-500 line-through">08:00 (餐后)</p>
+                            <p class="text-gray-700 line-through">苯磺酸氨氯地平片 (5mg, 1片)</p>
+                        </div>
+                        <div class="flex items-center space-x-2 text-green-600">
+                            <ion-icon name="checkmark-circle" class="text-2xl"></ion-icon>
+                            <span class="font-medium">已服用</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 p-4 bg-white rounded-lg shadow border-l-4 border-blue-500">
+                        <ion-icon name="alarm-outline" class="text-3xl text-blue-600"></ion-icon>
+                        <div class="flex-1 cursor-pointer" onclick="showMedDetail(1)">
+                            <p class="font-semibold text-blue-700">12:00 (餐前)</p>
+                            <p class="text-gray-800">二甲双胍缓释片 (0.5g, 1片)</p>
+                        </div>
+                        <button class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-md" onclick="confirmIntake(1); event.stopPropagation();">确认服用</button>
+                    </div>
+
+                    <div class="flex items-center space-x-3 p-4 bg-white rounded-lg shadow">
+                        <ion-icon name="moon-outline" class="text-3xl text-gray-600"></ion-icon>
+                        <div class="flex-1 cursor-pointer" onclick="showMedDetail(2)">
+                            <p class="font-semibold text-gray-700">20:00 (睡前)</p>
+                            <p class="text-gray-800">阿托伐他汀钙片 (20mg, 1片)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-md font-semibold text-gray-600 mb-2">健康报告</h3>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <p class="text-gray-700">本月用药依从性：<span class="font-bold text-green-600">95%</span></p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                            <div class="bg-green-600 h-2.5 rounded-full" style="width: 95%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图 2: 添加/编辑药物表单 -->
+            <div id="formView" class="view">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <form id="medForm" class="space-y-4">
+                        <div>
+                            <label for="medName" class="block text-sm font-medium text-gray-700">药品名称</label>
+                            <input type="text" id="medName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="例如: 苯磺酸氨氯地平片">
+                        </div>
+                        <div>
+                            <label for="medDosage" class="block text-sm font-medium text-gray-700">单次剂量</label>
+                            <input type="text" id="medDosage" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="例如: 5mg / 1片">
+                        </div>
+                        <div>
+                            <label for="medTime" class="block text-sm font-medium text-gray-700">用药时间</label>
+                            <input type="time" id="medTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="medInstruction" class="block text-sm font-medium text-gray-700">服用指示</label>
+                            <select id="medInstruction" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option>餐后</option>
+                                <option>餐前</option>
+                                <option>随餐</option>
+                                <option>睡前</option>
+                                <option>空腹</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end space-x-2 pt-2">
+                            <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md" onclick="showView('homeView')">取消</button>
+                            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow" onclick="saveMedication()">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 视图 3: 扫描加载中 -->
+            <div id="loadingView" class="view">
+                <div class="flex flex-col items-center justify-center h-64 bg-white rounded-lg shadow">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-gray-600 font-medium">正在识别处方信息...</p>
+                    <p class="text-sm text-gray-500">AI 正在为您结构化用药数据</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 底部导航栏 (模拟) -->
+        <footer class="bg-white shadow-inner sticky bottom-0 z-10 border-t border-gray-200">
+            <nav class="max-w-lg mx-auto px-6 py-3 flex justify-around items-center">
+                <button class="flex flex-col items-center text-blue-600" onclick="showView('homeView')">
+                    <ion-icon name="home" class="text-2xl"></ion-icon>
+                    <span class="text-xs">首页</span>
+                </button>
+                
+                <!-- 核心：添加药物按钮 -->
+                <button class="transform -translate-y-6 bg-blue-600 text-white p-4 rounded-full shadow-lg" onclick="showModal('addMedModal')">
+                    <ion-icon name="camera-outline" class="text-3xl"></ion-icon>
+                </button>
+                
+                <button class="flex flex-col items-center text-gray-500">
+                    <ion-icon name="document-text-outline" class="text-2xl"></ion-icon>
+                    <span class="text-xs">报告</span>
+                </button>
+            </nav>
+        </footer>
+    </div>
+
+    <!-- 弹窗 Modals -->
+
+    <!-- 弹窗 1: 添加药物方式选择 -->
+    <div id="addMedModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h3 class="text-lg font-semibold text-center">添加药物</h3>
+            <button class="w-full flex items-center justify-center p-4 bg-blue-600 text-white rounded-lg shadow" onclick="simulateScan()">
+                <ion-icon name="camera" class="text-2xl mr-3"></ion-icon>
+                <span class="font-medium">拍照 / 扫码识别</span>
+            </button>
+            <button class="w-full flex items-center justify-center p-4 bg-gray-100 text-gray-700 rounded-lg" onclick="manualAdd()">
+                <ion-icon name="create-outline" class="text-2xl mr-3"></ion-icon>
+                <span class="font-medium">手动输入</span>
+            </button>
+            <button class="mt-4 w-full text-center text-gray-500" onclick="hideModal('addMedModal')">取消</button>
+        </div>
+    </div>
+
+    <!-- 弹窗 2: 风险提示 (核心功能) -->
+    <div id="riskAlertModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <div class="flex flex-col items-center">
+                <ion-icon name="warning" class="text-7xl text-yellow-500"></ion-icon>
+                <h3 class="text-xl font-bold text-gray-800 mt-4">用药风险提示</h3>
+                <p id="riskAlertMessage" class="text-gray-600 text-center mt-2 mb-6">
+                    <!-- 消息将由 JS 动态插入 -->
+                </p>
+                <p class="text-sm text-red-600 font-bold mb-4">请立即咨询您的医生或药剂师！</p>
+                <button class="w-full p-3 bg-red-600 text-white rounded-lg font-medium shadow" onclick="hideModal('riskAlertModal')">
+                    我已知晓
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 3: 服药提醒 (核心功能) -->
+    <div id="reminderModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <div class="text-center">
+                <ion-icon name="alarm" class="text-7xl text-blue-600 animate-pulse"></ion-icon>
+                <h3 class="text-2xl font-bold text-gray-800 mt-4">该吃药啦！</h3>
+                <p class="text-gray-600 text-lg mt-2">现在是 <span id="reminderTime"></span></p>
+                <div class="bg-blue-50 p-4 rounded-lg my-6 border border-blue-200">
+                    <!-- 新增：药品图片 -->
+                    <img id="reminderMedImage" src="" alt="药品图片" class="w-full h-40 object-cover rounded-lg mb-4 bg-gray-200">
+                    <p class="text-xl font-semibold text-blue-800" id="reminderMedName"></p>
+                    <p class="text-md text-blue-700" id="reminderMedInfo"></p>
+                </div>
+                <div class="flex space-x-4">
+                    <button class="w-1/2 p-3 bg-gray-200 text-gray-700 rounded-lg font-medium" onclick="hideModal('reminderModal')">
+                        稍后提醒
+                    </button>
+                    <button class="w-1/2 p-3 bg-green-600 text-white rounded-lg font-medium shadow" onclick="confirmIntakeFromReminder()">
+                        我已服用
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 4: 药品详情 (新功能) -->
+    <div id="medDetailModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-40">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 space-y-4">
+            <img id="medDetailImage" src="" alt="药品图片" class="w-full h-48 object-cover rounded-lg bg-gray-200">
+            <h3 id="medDetailName" class="text-xl font-bold text-gray-800"></h3>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-500">用药信息</p>
+                <p id="medDetailInfo" class="text-gray-700"></p>
+            </div>
+
+            <!-- 新增：副作用提醒 -->
+            <div>
+                <p class="text-sm font-medium text-gray-500">常见副作用</p>
+                <p id="medDetailSideEffect" class="text-gray-700 bg-yellow-50 border border-yellow-200 rounded-md p-2"></p>
+            </div>
+
+            <button class="mt-4 w-full text-center p-2 bg-blue-600 text-white rounded-lg font-medium" onclick="hideModal('medDetailModal')">
+                关闭
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- 状态管理 (模拟数据库) ---
+        // 新增了 sideEffect 和 imageUrl 字段
+        const appState = {
+            currentView: 'homeView',
+            medications: [
+                { id: 0, name: '苯磺酸氨氯地平片', dosage: '5mg, 1片', time: '08:00', instruction: '餐后', taken: true, sideEffect: '常见：头痛、水肿', imageUrl: 'https://placehold.co/400x300/EBF8FF/3182CE?text=苯磺酸氨氯地平片' },
+                { id: 1, name: '二甲双胍缓释片', dosage: '0.5g, 1片', time: '12:00', instruction: '餐前', taken: false, sideEffect: '常见：腹泻、恶心、胃肠胀气', imageUrl: 'https://placehold.co/400x300/FEFEEB/D69E2E?text=二甲双胍缓释片' },
+                { id: 2, name: '阿托伐他汀钙片', dosage: '20mg, 1片', time: '20:00', instruction: '睡前', taken: false, sideEffect: '罕见：肌肉疼痛、肝酶升高', imageUrl: 'https://placehold.co/400x300/F0FFF4/38A169?text=阿托伐他汀钙片' }
+            ]
+        };
+
+        // 用于存储 AI 扫描的临时数据（包括副作用和图片）
+        let simulatedScanData = null;
+
+        // --- 页面加载完成时初始化 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMedicationList();
+            // 模拟一个3秒后的提醒，演示核心功能
+            setTimeout(() => {
+                showReminder(appState.medications[1]); // 提醒第二项
+            }, 3000);
+        });
+
+        // --- 视图切换 ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            appState.currentView = viewId;
+            // 更新标题
+            if (viewId === 'homeView') document.getElementById('viewTitle').textContent = '我的用药';
+            if (viewId === 'formView') document.getElementById('viewTitle').textContent = '添加药物';
+        }
+
+        // --- 弹窗控制 ---
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // --- 核心功能：渲染用药列表 ---
+        function renderMedicationList() {
+            const listEl = document.getElementById('medicationList');
+            listEl.innerHTML = ''; // 清空列表
+            
+            // 按时间排序
+            appState.medications.sort((a, b) => a.time.localeCompare(b.time));
+
+            appState.medications.forEach((med, index) => {
+                const isTaken = med.taken;
+                const iconName = med.time < '12:00' ? 'sunny-outline' : (med.time < '18:00' ? 'partly-sunny-outline' : 'moon-outline');
+                const timeColor = isTaken ? 'text-gray-400' : (med.time === '12:00' ? 'text-blue-600' : 'text-gray-600'); // 演示高亮
+                const itemClass = isTaken ? 'opacity-50' : 'shadow';
+                const textClass = isTaken ? 'line-through text-gray-500' : 'text-gray-800';
+
+                const medEl = `
+                    <div class="flex items-center space-x-3 p-4 bg-white rounded-lg ${itemClass}">
+                        <ion-icon name="${iconName}" class="text-3xl ${isTaken ? 'text-gray-400' : 'text-gray-700'}"></ion-icon>
+                        
+                        <!-- 修改：添加 onclick="showMedDetail" 和 cursor-pointer -->
+                        <div class="flex-1 cursor-pointer" onclick="showMedDetail(${med.id})">
+                            <p class="font-semibold ${isTaken ? 'text-gray-500 line-through' : timeColor}">
+                                ${med.time} (${med.instruction})
+                            </p>
+                            <p class="${textClass}">${med.name} (${med.dosage})</p>
+                        </div>
+
+                        ${isTaken ? `
+                        <div class="flex items-center space-x-2 text-green-600">
+                            <ion-icon name="checkmark-circle" class="text-2xl"></ion-icon>
+                            <span class="font-medium">已服用</span>
+                        </div>
+                        ` : `
+                        <!-- 修改：添加 event.stopPropagation() 防止点击按钮时触发详情弹窗 -->
+                        <button class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-md" onclick="confirmIntake(${med.id}); event.stopPropagation();">
+                            确认服用
+                        </button>
+                        `}
+                    </div>
+                `;
+                listEl.innerHTML += medEl;
+            });
+        }
+
+        // --- 核心功能：模拟 OCR 扫描 ---
+        function simulateScan() {
+            hideModal('addMedModal');
+            showView('loadingView'); // 显示加载视图
+
+            // 模拟2秒钟的 AI 识别
+            // TODO: 在真实应用中，这里会调用 AI (Gemini) API
+            setTimeout(() => {
+                // 模拟识别结果 (新增副作用和图片)
+                const mockData = {
+                    name: '阿司匹林肠溶片',
+                    dosage: '100mg, 1片',
+                    time: '19:00',
+                    instruction: '餐后',
+                    sideEffect: '常见：胃肠道不适、出血风险',
+                    imageUrl: 'https://placehold.co/400x300/FFEEEE/C53030?text=阿司匹林肠溶片'
+                };
+
+                // 存储模拟数据，以便保存时使用
+                simulatedScanData = mockData;
+
+                // 填充表单
+                document.getElementById('medName').value = mockData.name;
+                document.getElementById('medDosage').value = mockData.dosage;
+                document.getElementById('medTime').value = mockData.time;
+                document.getElementById('medInstruction').value = mockData.instruction;
+                
+                showView('formView'); // 显示填充好的表单
+            }, 2000);
+        }
+
+        // --- 核心功能：手动添加 ---
+        function manualAdd() {
+            hideModal('addMedModal');
+            simulatedScanData = null; // 手动添加时清除模拟数据
+            document.getElementById('medForm').reset(); // 清空表单
+            showView('formView');
+        }
+
+        // --- 核心功能：保存药物 ---
+        function saveMedication() {
+            const newMedName = document.getElementById('medName').value;
+            const newMed = {
+                id: appState.medications.length,
+                name: newMedName,
+                dosage: document.getElementById('medDosage').value,
+                time: document.getElementById('medTime').value,
+                instruction: document.getElementById('medInstruction').value,
+                taken: false,
+                sideEffect: '暂无信息', // 默认值
+                imageUrl: `https://placehold.co/400x300/F1F5F9/94A3B8?text=${newMedName}` // 默认占位图
+            };
+
+            // 检查是否有来自 AI 扫描的额外数据
+            if (simulatedScanData && simulatedScanData.name === newMedName) {
+                newMed.sideEffect = simulatedScanData.sideEffect;
+                newMed.imageUrl = simulatedScanData.imageUrl;
+                simulatedScanData = null; // 清除临时数据
+            }
+
+            // ** 核心功能：检查药物相互作用 (模拟) **
+            // TODO: 在真实应用中，这里会调用 AI (Gemini) 或专业药品数据库 API
+            checkInteractions(newMed);
+
+            appState.medications.push(newMed);
+            renderMedicationList();
+            showView('homeView');
+            document.getElementById('medForm').reset();
+        }
+
+        // --- 核心功能：模拟风险检查 ---
+        function checkInteractions(newMed) {
+            const existingMeds = appState.medications.map(m => m.name.toLowerCase());
+            const newMedName = newMed.name.toLowerCase();
+            let alertMsg = '';
+
+            // 规则 1: 阿司匹林 + 布洛芬 (已存在)
+            if (newMedName.includes('阿司匹林') && (existingMeds.includes('布洛芬') || existingMeds.includes('ibuprofen'))) {
+                alertMsg = '风险提示：阿司匹林与布洛芬同用可能增加胃肠道出血风险。';
+            }
+            
+            // 规则 2: 添加 布洛芬 (阿司匹林已存在)
+            if (newMedName.includes('布洛芬') && (existingMeds.includes('阿司匹林肠溶片') || existingMeds.includes('阿司匹林'))) {
+                 alertMsg = '风险提示：布洛芬可能削弱阿司匹林的心血管保护作用。';
+            }
+            
+            // 规则 3: 华法林 + 阿司匹林
+             if (newMedName.includes('华法林') && existingMeds.some(m => m.includes('阿司匹林'))) {
+                 alertMsg = '高风险提示：华法林与阿司匹林同用会显著增加出血风险！';
+            }
+             if (existingMeds.includes('华法林') && newMedName.includes('阿司匹林')) {
+                 alertMsg = '高风险提示：华法林与阿司匹林同用会显著增加出血风险！';
+            }
+
+            if (alertMsg) {
+                document.getElementById('riskAlertMessage').textContent = alertMsg;
+                showModal('riskAlertModal');
+            }
+        }
+
+        // --- 核心功能：确认服药 ---
+        function confirmIntake(medId) {
+            const med = appState.medications.find(m => m.id === medId);
+            if (med) {
+                med.taken = true;
+            }
+            renderMedicationList();
+        }
+
+        // --- 核心功能：显示服药提醒 ---
+        function showReminder(med) {
+            if (med && !med.taken) {
+                // 新增：设置药品图片
+                const placeholderImage = `https://placehold.co/400x300/F1F5F9/94A3B8?text=${med.name}`;
+                document.getElementById('reminderMedImage').src = med.imageUrl || placeholderImage;
+                
+                document.getElementById('reminderTime').textContent = med.time;
+                document.getElementById('reminderMedName').textContent = med.name;
+                document.getElementById('reminderMedInfo').textContent = `${med.dosage} / ${med.instruction}`;
+                // 存储当前提醒的药物ID
+                document.getElementById('reminderModal').dataset.medId = med.id;
+                showModal('reminderModal');
+            }
+        }
+
+        // --- 从提醒中确认服药 ---
+        function confirmIntakeFromReminder() {
+            const medId = parseInt(document.getElementById('reminderModal').dataset.medId);
+            confirmIntake(medId);
+            hideModal('reminderModal');
+        }
+
+        // --- 新功能：显示药品详情弹窗 ---
+        function showMedDetail(medId) {
+            const med = appState.medications.find(m => m.id === medId);
+            if (!med) return;
+
+            const placeholderImage = `https://placehold.co/400x300/F1F5F9/94A3B8?text=${med.name}`;
+            
+            // 填充弹窗内容
+            document.getElementById('medDetailImage').src = med.imageUrl || placeholderImage;
+            document.getElementById('medDetailName').textContent = med.name;
+            document.getElementById('medDetailInfo').textContent = `${med.dosage} / ${med.time} (${med.instruction})`;
+            document.getElementById('medDetailSideEffect').textContent = med.sideEffect || '暂无信息';
+
+            // 显示弹窗
+            showModal('medDetailModal');
+        }
+
+    </script>
+</body>
+</html>
