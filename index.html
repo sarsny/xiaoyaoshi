@@ -52,7 +52,8 @@
         <header class="bg-white shadow-sm sticky top-0 z-10">
             <div class="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 id="viewTitle" class="text-xl font-bold text-gray-800">我的用药</h1>
-                <button class="text-gray-600">
+                <!-- 修改：添加 onclick 事件，链接到新的设置视图 -->
+                <button class="text-gray-600" onclick="showView('settingsView')">
                     <ion-icon name="person-circle-outline" class="text-3xl"></ion-icon>
                 </button>
             </div>
@@ -187,128 +188,35 @@
                 </div>
             </div>
 
-            <!-- 视图 6: 多材料扫描上传 -->
-            <div id="scanUploadView" class="view">
-                <div class="bg-white p-6 rounded-lg shadow space-y-6">
-                    <h2 class="text-xl font-bold text-gray-800 text-center">智能识别</h2>
-                    <p class="text-gray-600 text-center text-sm">请依次拍摄以下材料，AI 将综合分析并为您生成最准确的用药计划。</p>
+            <!-- 新增视图 9: 作息时间设置 (新功能) -->
+            <div id="settingsView" class="view">
+                <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800 text-center">作息时间调整</h2>
+                    <p class="text-gray-600 text-center text-sm">调整作息后，AI 将自动为您重新计算与用餐、睡眠相关的用药时间。</p>
                     
-                    <!-- 模拟上传项目 -->
-                    <div class="space-y-4">
-                        <div id="uploadStep1" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
-                            <div>
-                                <p class="font-medium text-gray-700">1. 处方单</p>
-                                <p class="text-sm text-gray-500">医生开具的处方</p>
-                            </div>
-                            <button class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center" onclick="simulateUpload('uploadStep1')">
-                                <ion-icon name="camera-outline" class="mr-1"></ion-icon>
-                                拍照
-                            </button>
-                        </div>
-                        
-                        <div id="uploadStep2" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
-                            <div>
-                                <p class="font-medium text-gray-700">2. 药房标签</p>
-                                <p class="text-sm text-gray-500">贴在药盒上的用药指引</p>
-                            </div>
-                            <button class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center" onclick="simulateUpload('uploadStep2')">
-                                <ion-icon name="camera-outline" class="mr-1"></ion-icon>
-                                拍照
-                            </button>
-                        </div>
-
-                        <div id="uploadStep3" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
-                            <div>
-                                <p class="font-medium text-gray-700">3. 药品说明书</p>
-                                <p class="text-sm text-gray-500">药盒内附的详细说明</p>
-                            </div>
-                            <button class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center" onclick="simulateUpload('uploadStep3')">
-                                <ion-icon name="camera-outline" class="mr-1"></ion-icon>
-                                拍照
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="pt-4">
-                        <button id="startAnalysisBtn" type="button" class="w-full px-4 py-3 bg-gray-400 text-white rounded-md shadow font-medium" disabled onclick="startAiAnalysis()">
-                            请先完成上传
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 新增视图 7: 健康报告 -->
-            <div id="reportView" class="view">
-                <div class="space-y-6">
-                    <!-- 1. 总体依从性 -->
-                    <div class="bg-white p-6 rounded-lg shadow text-center">
-                        <p class="text-sm font-medium text-gray-500">本月总体依从性</p>
-                        <p id="reportOverallAdherence" class="text-5xl font-bold text-green-600 mt-2">95%</p>
-                        <p class="text-sm text-gray-600 mt-2">继续保持，您的坚持是健康的基础！</p>
-                    </div>
-
-                    <!-- 2. 月度日历 (模拟) -->
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-4 text-center">2025年 11月 服药日历</h3>
-                        <div id="reportCalendar" class="grid grid-cols-7 gap-2">
-                            <!-- JS 动态生成日历 -->
-                        </div>
-                        <div class="flex justify-center space-x-4 mt-4 text-xs text-gray-500">
-                            <span class="flex items-center"><span class="w-3 h-3 bg-green-500 rounded-full mr-1"></span>圆满</span>
-                            <span class="flex items-center"><span class="w-3 h-3 bg-yellow-400 rounded-full mr-1"></span>部分</span>
-                            <span class="flex items-center"><span class="w-3 h-3 bg-gray-300 rounded-full mr-1"></span>缺漏</span>
-                        </div>
-                    </div>
-
-                    <!-- 3. 药物依从性明细 -->
-                    <div class="bg-white rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-gray-700 p-4 border-b">药物依从性详情</h3>
-                        <ul id="reportMedList" class="divide-y divide-gray-200">
-                            <!-- JS 动态生成列表 -->
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 新增视图 8: AI 智能排程建议 (核心仪式感) -->
-            <div id="aiReasoningView" class="view">
-                <div class="bg-white p-6 rounded-lg shadow space-y-5">
-                    <h2 class="text-xl font-bold text-gray-800 text-center">AI 智能排程建议</h2>
-                    
-                    <!-- AI 识别的药物信息 -->
-                    <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                        <img id="reasoningMedImage" src="https://placehold.co/400x300/FFEEEE/C53030?text=阿司匹林肠溶片" alt="药品图片" class="w-20 h-20 object-cover rounded-lg bg-gray-200 flex-shrink-0">
-                        <div class="flex-1">
-                            <p id="reasoningMedName" class="text-lg font-semibold text-gray-800">阿司匹林肠溶片</p>
-                            <p id="reasoningMedInfo" class="text-gray-600">100mg, 1片</p>
-                        </div>
-                    </div>
-
-                    <!-- AI 推荐理由 (核心) -->
-                    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                        <p class="text-sm font-medium text-yellow-800">AI 推荐理由：</p>
-                        <p id="aiReasoningText" class="text-sm text-yellow-700 mt-1">根据“餐后”医嘱和您 07:30 的早餐时间，AI 推荐此时服用。</p>
-                    </div>
-                    
-                    <!-- 用户微调区 -->
                     <div>
-                        <label for="reasoningMedTime" class="block text-sm font-medium text-gray-700">服药时间 (您可微调)</label>
-                        <input type="time" id="reasoningMedTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="07:30">
+                        <label for="settingsWakeTime" class="block text-sm font-medium text-gray-700">起床时间</label>
+                        <input type="time" id="settingsWakeTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
                     <div>
-                        <label for="reasoningMedInstruction" class="block text-sm font-medium text-gray-700">服用说明 (您可微调)</label>
-                        <input type="text" id="reasoningMedInstruction" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="餐后">
+                        <label for="settingsBreakfastTime" class="block text-sm font-medium text-gray-700">早餐时间</label>
+                        <input type="time" id="settingsBreakfastTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
-                    
-                    <!-- 操作按钮 -->
-                    <div class="flex justify-between space-x-2 pt-4">
-                        <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md w-1/2" onclick="showView('scanUploadView')">
-                            <ion-icon name="arrow-back-outline" class="mr-1"></ion-icon>
-                            重新扫描
-                        </button>
-                        <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow w-1/2" onclick="saveFromReasoning()">
-                            确认并保存
-                        </button>
+                    <div>
+                        <label for="settingsLunchTime" class="block text-sm font-medium text-gray-700">午餐时间</label>
+                        <input type="time" id="settingsLunchTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label for="settingsDinnerTime" class="block text-sm font-medium text-gray-700">晚餐时间</label>
+                        <input type="time" id="settingsDinnerTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label for="settingsSleepTime" class="block text-sm font-medium text-gray-700">睡觉时间</label>
+                        <input type="time" id="settingsSleepTime" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div class="pt-4 flex space-x-2">
+                        <button type="button" class="w-1/2 px-4 py-3 bg-gray-200 text-gray-700 rounded-md" onclick="showView('homeView')">取消</button>
+                        <button type="button" class="w-1/2 px-4 py-3 bg-blue-600 text-white rounded-md shadow font-medium" onclick="updateSchedule()">保存并更新计划</button>
                     </div>
                 </div>
             </div>
@@ -425,13 +333,34 @@
         </div>
     </div>
 
-    <!-- 新增 弹窗 5: 服药表扬 (新功能) -->
+    <!-- 弹窗 5: 服药表扬 (新功能) -->
     <div id="praiseModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-8 text-center">
             <div class="text-6xl mb-4">👍</div>
             <h3 class="text-xl font-bold text-gray-800">太棒了！</h3>
             <p class="text-gray-600 mt-2">您已按时服用 <span id="praiseMedName" class="font-medium"></span>！</p>
             <p class="text-gray-600 mt-1">好好吃药，身体棒棒！</p>
+        </div>
+    </div>
+
+    <!-- 新增 弹窗 6: 作息调整确认 (新功能) -->
+    <div id="scheduleUpdateModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+            <div class="flex flex-col items-center">
+                <ion-icon name="sync-circle-outline" class="text-7xl text-blue-600"></ion-icon>
+                <h3 class="text-xl font-bold text-gray-800 mt-4">用药计划已更新</h3>
+                <p class="text-gray-600 text-center mt-2 mb-4">
+                    根据您的新
+                    作息时间，以下药物时间已自动调整：
+                </p>
+                <!-- 变化列表 -->
+                <ul id="scheduleChangesList" class="list-disc list-inside w-full bg-gray-50 p-3 rounded-md text-sm text-gray-700 mb-6">
+                    <!-- <li>阿司匹林: 07:30 -> 08:00</li> -->
+                </ul>
+                <button class="w-full p-3 bg-blue-600 text-white rounded-lg font-medium shadow" onclick="hideModal('scheduleUpdateModal')">
+                    好的，我知道了
+                </button>
+            </div>
         </div>
     </div>
 
@@ -528,7 +457,16 @@
             if (viewId === 'formView') document.getElementById('viewTitle').textContent = '添加药物';
             if (viewId === 'onboardingView') document.getElementById('viewTitle').textContent = '欢迎使用';
             if (viewId === 'scanUploadView') document.getElementById('viewTitle').textContent = '智能识别';
-            if (viewId === 'aiReasoningView') document.getElementById('viewTitle').textContent = 'AI 排程建议'; // 新增
+            if (viewId === 'aiReasoningView') document.getElementById('viewTitle').textContent = 'AI 排程建议';
+            if (viewId === 'settingsView') { // 新增
+                document.getElementById('viewTitle').textContent = '作息时间调整';
+                // 预填充当前作息
+                document.getElementById('settingsWakeTime').value = appState.userProfile.wakeTime;
+                document.getElementById('settingsBreakfastTime').value = appState.userProfile.breakfastTime;
+                document.getElementById('settingsLunchTime').value = appState.userProfile.lunchTime;
+                document.getElementById('settingsDinnerTime').value = appState.userProfile.dinnerTime;
+                document.getElementById('settingsSleepTime').value = appState.userProfile.sleepTime;
+            }
             if (viewId === 'reportView') { // 新增
                 document.getElementById('viewTitle').textContent = '健康报告';
                 renderReportView(); // 渲染报告
@@ -538,7 +476,7 @@
             const homeBtn = document.getElementById('navHomeBtn');
             const reportBtn = document.getElementById('navReportBtn');
             // 修复：主页按钮在相关流程视图（表单、扫描、加载）中也应保持高亮
-            const homeRelatedViews = ['homeView', 'formView', 'scanUploadView', 'loadingView', 'onboardingView', 'aiReasoningView']; // 新增 aiReasoningView
+            const homeRelatedViews = ['homeView', 'formView', 'scanUploadView', 'loadingView', 'onboardingView', 'aiReasoningView', 'settingsView']; // 新增 settingsView
             homeBtn.classList.toggle('text-blue-600', homeRelatedViews.includes(viewId));
             homeBtn.classList.toggle('text-gray-500', !homeRelatedViews.includes(viewId));
             reportBtn.classList.toggle('text-blue-600', viewId === 'reportView');
@@ -812,6 +750,108 @@
             appState.medications.push(newMed);
             renderMedicationList();
             showView('homeView');
+        }
+
+        // --- 新增功能：更新作息时间并重新计算 ---
+        function updateSchedule() {
+            const oldProfile = { ...appState.userProfile }; // 备份旧作息
+            
+            // 1. 获取新作息
+            const newProfile = {
+                wakeTime: document.getElementById('settingsWakeTime').value,
+                breakfastTime: document.getElementById('settingsBreakfastTime').value,
+                lunchTime: document.getElementById('settingsLunchTime').value,
+                dinnerTime: document.getElementById('settingsDinnerTime').value,
+                sleepTime: document.getElementById('settingsSleepTime').value
+            };
+
+            // 2. 检查是否有变化
+            if (JSON.stringify(oldProfile) === JSON.stringify(newProfile)) {
+                showView('homeView'); // 没有变化，直接返回
+                return;
+            }
+
+            let changesList = [];
+
+            // 3. 遍历药物列表，重新计算时间
+            appState.medications.forEach(med => {
+                const oldMedTime = med.time;
+                
+                // 这是一个简化的逻辑，它假定药物时间 *完全* 匹配旧作息时间
+                // 真实应用中会使用 'rule' (e.g., 'after_breakfast')
+                if (med.time === oldProfile.breakfastTime && (med.instruction.includes('餐后') || med.instruction.includes('早餐'))) {
+                    med.time = newProfile.breakfastTime;
+                } else if (med.time === oldProfile.lunchTime && (med.instruction.includes('餐') || med.instruction.includes('午餐'))) {
+                    med.time = newProfile.lunchTime; // 假设“餐前”也以此为基准
+                } else if (med.time === oldProfile.dinnerTime && (med.instruction.includes('餐') || med.instruction.includes('晚餐'))) {
+                    med.time = newProfile.dinnerTime;
+                } else if (med.time === oldProfile.sleepTime && med.instruction.includes('睡前')) {
+                    med.time = newProfile.sleepTime;
+                } else if (med.time === oldProfile.wakeTime && med.instruction.includes('起床')) {
+                    med.time = newProfile.wakeTime;
+                }
+                // 模拟“一日三次”的抗生素 (ID 3,4,5)
+                // 假设它总是基于起床时间 (7:00, 15:00, 23:00)
+                if (med.id === 3 && oldMedTime === oldProfile.wakeTime) {
+                    med.time = newProfile.wakeTime;
+                } else if (med.id === 4 && oldMedTime === addHours(oldProfile.wakeTime, 8)) {
+                    med.time = addHours(newProfile.wakeTime, 8);
+                } else if (med.id === 5 && oldMedTime === addHours(oldProfile.wakeTime, 16)) {
+                    med.time = addHours(newProfile.wakeTime, 16);
+                }
+
+                if (oldMedTime !== med.time) {
+                    changesList.push({ name: med.name, old: oldMedTime, new: med.time });
+                }
+            });
+
+            // 4. 更新 appState 中的作息
+            appState.userProfile = newProfile;
+
+            // 5. 重新渲染列表
+            renderMedicationList();
+            
+            // 6. 切换回主页
+            showView('homeView');
+
+            // 7. 如果有变动，显示确认弹窗
+            if (changesList.length > 0) {
+                const listEl = document.getElementById('scheduleChangesList');
+                listEl.innerHTML = ''; // 清空
+                // 使用 Set 确保药物名称不重复 (针对一日三次的情况)
+                const uniqueChanges = new Map();
+                changesList.forEach(change => {
+                    if (!uniqueChanges.has(change.name)) {
+                         uniqueChanges.set(change.name, change);
+                    }
+                });
+
+                uniqueChanges.forEach(change => {
+                    // 找出所有同名药物的新时间
+                    const allNewTimes = appState.medications
+                                        .filter(m => m.name === change.name)
+                                        .map(m => m.time)
+                                        .join(', ');
+                    
+                    if (change.name.includes('抗生素')) {
+                         listEl.innerHTML += `<li class="mb-1">${change.name}: 已自动调整为 ${allNewTimes}</li>`;
+                    } else {
+                         listEl.innerHTML += `<li class="mb-1">${change.name}: ${change.old} <span class="font-medium">→</span> ${change.new}</li>`;
+                    }
+                });
+                showModal('scheduleUpdateModal');
+            }
+        }
+
+        // --- 辅助函数：用于计算“一日三次” (模拟) ---
+        function addHours(time, hours) {
+            try {
+                let [h, m] = time.split(':').map(Number);
+                let newH = (h + hours) % 24;
+                return `${String(newH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            } catch (e) {
+                return time; // 出错时返回原时间
+            }
         }
 
         // --- 核心功能：模拟药物相互作用检查 ---
